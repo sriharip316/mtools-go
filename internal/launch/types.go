@@ -5,11 +5,11 @@ const ProtocolVersion = 2
 
 // StartupState represents the stored environment state in .mlaunch_startup.
 type StartupState struct {
-	ProtocolVersion int                    `json:"protocol_version"`
-	MtoolsVersion   string                 `json:"mtools_version"`
-	ParsedArgs      map[string]interface{} `json:"parsed_args"`
-	UnknownArgs     []string               `json:"unknown_args"`
-	StartupInfo     map[string]string      `json:"startup_info"`
+	ProtocolVersion int               `json:"protocol_version"`
+	MtoolsVersion   string            `json:"mtools_version"`
+	ParsedArgs      map[string]any    `json:"parsed_args"`
+	UnknownArgs     []string          `json:"unknown_args"`
+	StartupInfo     map[string]string `json:"startup_info"`
 }
 
 // NodeInfo represents the discovered state and metadata of a single MongoDB node.

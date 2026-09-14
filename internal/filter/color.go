@@ -84,10 +84,7 @@ func Colorize(line string, baseColor string, spans []Span) string {
 		if s.Start >= lineLen {
 			continue
 		}
-		end := s.End
-		if end > lineLen {
-			end = lineLen
-		}
+		end := min(s.End, lineLen)
 		if end > s.Start {
 			clamped = append(clamped, Span{Start: s.Start, End: end})
 		}

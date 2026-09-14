@@ -10,14 +10,12 @@ import (
 
 func generateLogLines(count int, start time.Time, step time.Duration) string {
 	var sb strings.Builder
-	for i := 0; i < count; i++ {
+	for i := range count {
 		t := start.Add(time.Duration(i) * step)
-		sb.WriteString(fmt.Sprintf(
-			`{"t":{"$date":"%s"},"s":"I","c":"COMMAND","id":51803,"ctx":"conn%d","msg":"Slow query","attr":{"type":"command","ns":"test.coll","durationMillis":%d}}`+"\n",
+		fmt.Fprintf(&sb, `{"t":{"$date":"%s"},"s":"I","c":"COMMAND","id":51803,"ctx":"conn%d","msg":"Slow query","attr":{"type":"command","ns":"test.coll","durationMillis":%d}}`+"\n",
 			t.Format(time.RFC3339Nano),
 			i+1,
-			(i+1)*10,
-		))
+			(i+1)*10)
 	}
 	return sb.String()
 }

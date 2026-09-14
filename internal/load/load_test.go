@@ -121,11 +121,11 @@ func TestGeneratorDataTypes(t *testing.T) {
 			"email":     {Type: "string", Format: "email"},
 			"uuid":      {Type: "string", Format: "uuid"},
 			"ipv4":      {Type: "string", Format: "ipv4"},
-			"age":       {Type: "integer", Minimum: floatPtr(20), Maximum: floatPtr(40)},
-			"balance":   {Type: "number", Minimum: floatPtr(100.5), Maximum: floatPtr(500.5)},
+			"age":       {Type: "integer", Minimum: new(float64(20)), Maximum: new(float64(40))},
+			"balance":   {Type: "number", Minimum: new(100.5), Maximum: new(500.5)},
 			"active":    {Type: "boolean"},
-			"status":    {Type: "string", Enum: []interface{}{"A", "B", "C"}},
-			"tags":      {Type: "array", MinItems: intPtr(2), MaxItems: intPtr(5), Items: &JSONSchema{Type: "string", Faker: "word"}},
+			"status":    {Type: "string", Enum: []any{"A", "B", "C"}},
+			"tags":      {Type: "array", MinItems: new(2), MaxItems: new(5), Items: &JSONSchema{Type: "string", Faker: "word"}},
 			"createdAt": {Type: "string", Format: "date-time"},
 			"profile": {
 				Type: "object",
@@ -138,7 +138,7 @@ func TestGeneratorDataTypes(t *testing.T) {
 		Required: []string{"_id", "name", "email", "age", "active", "status", "profile"},
 	}
 
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		doc := gen.GenerateDocument(schema)
 		if doc == nil {
 			t.Fatalf("generated document is nil")
@@ -203,7 +203,7 @@ func TestWorkingSet(t *testing.T) {
 
 	// Add 50 items
 	var ids []bson.ObjectID
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		id := bson.NewObjectID()
 		ids = append(ids, id)
 		ws.Add("users", id)
@@ -230,7 +230,7 @@ func TestWorkingSet(t *testing.T) {
 
 	// Ensure capacity bound
 	smallWS := NewWorkingSet(5)
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		smallWS.Add("orders", bson.NewObjectID())
 	}
 	if smallWS.Size("orders") != 5 {
@@ -248,7 +248,7 @@ func TestCollectionSampler(t *testing.T) {
 	counts := make(map[string]int)
 
 	const samples = 10000
-	for i := 0; i < samples; i++ {
+	for range samples {
 		c := sampler.Sample()
 		counts[c.Name]++
 	}
@@ -277,7 +277,7 @@ func TestCRUDSampler(t *testing.T) {
 	counts := make(map[OpType]int)
 
 	const samples = 10000
-	for i := 0; i < samples; i++ {
+	for range samples {
 		op := sampler.Sample()
 		counts[op]++
 	}
@@ -349,11 +349,11 @@ func TestConcurrentWorkingSet(t *testing.T) {
 	ws := NewWorkingSet(1000)
 	var wg sync.WaitGroup
 
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			for j := 0; j < 500; j++ {
+			for j := range 500 {
 				id := bson.NewObjectID()
 				ws.Add("users", id)
 				_, _ = ws.Sample("users")

@@ -8,44 +8,44 @@ import (
 func TestJSON2Pattern(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    interface{}
+		input    any
 		expected string
 	}{
 		{
 			name:     "simple flat document",
-			input:    map[string]interface{}{"b": 1, "a": 2},
+			input:    map[string]any{"b": 1, "a": 2},
 			expected: `{"a": 1, "b": 1}`,
 		},
 		{
 			name: "nested document",
-			input: map[string]interface{}{
-				"a": map[string]interface{}{
+			input: map[string]any{
+				"a": map[string]any{
 					"b": 1,
-					"c": []interface{}{1, 2, 3},
+					"c": []any{1, 2, 3},
 				},
 			},
 			expected: `{"a": {"b": 1, "c": [1]}}`,
 		},
 		{
 			name:     "empty document",
-			input:    map[string]interface{}{},
+			input:    map[string]any{},
 			expected: `{}`,
 		},
 		{
 			name: "empty array in document",
-			input: map[string]interface{}{
-				"a": []interface{}{},
+			input: map[string]any{
+				"a": []any{},
 			},
 			expected: `{"a": []}`,
 		},
 		{
 			name: "complex nested with $or",
-			input: map[string]interface{}{
-				"$or": []interface{}{
-					map[string]interface{}{"x": 1},
-					map[string]interface{}{
-						"$or": []interface{}{
-							map[string]interface{}{"y": 1},
+			input: map[string]any{
+				"$or": []any{
+					map[string]any{"x": 1},
+					map[string]any{
+						"$or": []any{
+							map[string]any{"y": 1},
 						},
 					},
 				},
@@ -54,9 +54,9 @@ func TestJSON2Pattern(t *testing.T) {
 		},
 		{
 			name: "deeply nested objects",
-			input: map[string]interface{}{
-				"level1": map[string]interface{}{
-					"level2": map[string]interface{}{
+			input: map[string]any{
+				"level1": map[string]any{
+					"level2": map[string]any{
 						"level3": "value",
 					},
 				},
@@ -65,7 +65,7 @@ func TestJSON2Pattern(t *testing.T) {
 		},
 		{
 			name: "various value types in map",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"string": "hello",
 				"int":    42,
 				"float":  3.1415,
@@ -106,19 +106,19 @@ func TestJSON2Pattern(t *testing.T) {
 		},
 		{
 			name:     "empty slice at top level",
-			input:    []interface{}{},
+			input:    []any{},
 			expected: `[]`,
 		},
 		{
 			name:     "primitive slice at top level",
-			input:    []interface{}{1, 2, 3},
+			input:    []any{1, 2, 3},
 			expected: `[1]`,
 		},
 		{
 			name: "slice of maps at top level",
-			input: []interface{}{
-				map[string]interface{}{"z": 10, "a": 20},
-				map[string]interface{}{"b": 30},
+			input: []any{
+				map[string]any{"z": 10, "a": 20},
+				map[string]any{"b": 30},
 			},
 			expected: `[{"a": 1, "z": 1}]`,
 		},

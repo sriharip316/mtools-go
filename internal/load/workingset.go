@@ -18,8 +18,8 @@ type WorkingSet struct {
 }
 
 type idPool struct {
-	items []interface{}
-	index map[interface{}]int
+	items []any
+	index map[any]int
 }
 
 // NewWorkingSet creates a new WorkingSet with default or specified capacity.
@@ -35,7 +35,7 @@ func NewWorkingSet(maxSize int) *WorkingSet {
 }
 
 // Add inserts an ID into the collection's active working set.
-func (ws *WorkingSet) Add(coll string, id interface{}) {
+func (ws *WorkingSet) Add(coll string, id any) {
 	if id == nil {
 		return
 	}
@@ -46,8 +46,8 @@ func (ws *WorkingSet) Add(coll string, id interface{}) {
 	p, ok := ws.pools[coll]
 	if !ok {
 		p = &idPool{
-			items: make([]interface{}, 0, 1024),
-			index: make(map[interface{}]int),
+			items: make([]any, 0, 1024),
+			index: make(map[any]int),
 		}
 		ws.pools[coll] = p
 	}
@@ -75,7 +75,7 @@ func (ws *WorkingSet) Add(coll string, id interface{}) {
 }
 
 // Sample randomly selects an ID from the collection's active working set.
-func (ws *WorkingSet) Sample(coll string) (interface{}, bool) {
+func (ws *WorkingSet) Sample(coll string) (any, bool) {
 	ws.mu.RLock()
 	defer ws.mu.RUnlock()
 
@@ -92,7 +92,7 @@ func (ws *WorkingSet) Sample(coll string) (interface{}, bool) {
 }
 
 // Remove removes an ID from the collection's active working set (e.g. after a Delete operation).
-func (ws *WorkingSet) Remove(coll string, id interface{}) bool {
+func (ws *WorkingSet) Remove(coll string, id any) bool {
 	if id == nil {
 		return false
 	}

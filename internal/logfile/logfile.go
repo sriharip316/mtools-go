@@ -169,7 +169,7 @@ func (lf *LogFile) calculateBounds() error {
 	lf.file.Seek(0, io.SeekStart)
 	lf.reader.Reset(lf.file)
 
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		ev, err := lf.Next()
 		if err != nil {
 			break
@@ -181,10 +181,7 @@ func (lf *LogFile) calculateBounds() error {
 	}
 
 	// 2. Find End timestamp from near end of file
-	tailSize := int64(64 * 1024)
-	if tailSize > lf.FileSize {
-		tailSize = lf.FileSize
-	}
+	tailSize := min(int64(64*1024), lf.FileSize)
 
 	lf.file.Seek(lf.FileSize-tailSize, io.SeekStart)
 	lf.reader.Reset(lf.file)

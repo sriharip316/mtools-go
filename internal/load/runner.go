@@ -213,10 +213,8 @@ func runInitialLoad(ctx context.Context, db *mongo.Database, schemaCfg *SchemaCo
 		batchSize = 1
 	}
 
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range workers {
+		wg.Go(func() {
 			gen := NewGenerator()
 
 			for {
@@ -249,8 +247,8 @@ func runInitialLoad(ctx context.Context, db *mongo.Database, schemaCfg *SchemaCo
 						stats.RecordInitLoad(collCfg.Name, lat, 1)
 					}
 				} else {
-					docs := make([]interface{}, batchSize)
-					ids := make([]interface{}, batchSize)
+					docs := make([]any, batchSize)
+					ids := make([]any, batchSize)
 					for b := 0; b < batchSize; b++ {
 						d := gen.GenerateDocument(collCfg.Schema)
 						docs[b] = d
@@ -273,7 +271,7 @@ func runInitialLoad(ctx context.Context, db *mongo.Database, schemaCfg *SchemaCo
 					}
 				}
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -282,10 +280,8 @@ func runInitialLoad(ctx context.Context, db *mongo.Database, schemaCfg *SchemaCo
 func runCRUDSimulation(ctx context.Context, db *mongo.Database, schemaCfg *SchemaConfig, collSampler *CollectionSampler, crudSamplers map[string]*CRUDSampler, workingSet *WorkingSet, rl *RateLimiter, stats *StatsTracker, workers int) {
 	var wg sync.WaitGroup
 
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range workers {
+		wg.Go(func() {
 			gen := NewGenerator()
 
 			for {
@@ -319,7 +315,7 @@ func runCRUDSimulation(ctx context.Context, db *mongo.Database, schemaCfg *Schem
 				case OpRead:
 					// 85% Hit query, 15% Miss query
 					isHitQuery := (gen.rng.Float64() < 0.85)
-					var id interface{}
+					var id any
 					var ok bool
 
 					if isHitQuery {
@@ -331,7 +327,6 @@ func runCRUDSimulation(ctx context.Context, db *mongo.Database, schemaCfg *Schem
 						filter = bson.M{"_id": id}
 					} else {
 						filter = gen.GenerateMissQuery()
-						isHitQuery = false
 					}
 
 					start := time.Now()
@@ -392,7 +387,7 @@ func runCRUDSimulation(ctx context.Context, db *mongo.Database, schemaCfg *Schem
 					}
 				}
 			}
-		}()
+		})
 	}
 
 	wg.Wait()

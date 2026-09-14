@@ -323,10 +323,7 @@ func RunConnections(lf *logfile.LogFile, opts *Options) {
 			ipClosed[ip]++
 			if opts.ConnStats && ev.ConnectionID != nil && !ev.DateTime.IsZero() {
 				if start, ok := connStarts[*ev.ConnectionID]; ok {
-					dur := int(ev.DateTime.Sub(start).Seconds())
-					if dur < 0 {
-						dur = 0
-					}
+					dur := max(int(ev.DateTime.Sub(start).Seconds()), 0)
 					ipDurations[ip] = append(ipDurations[ip], dur)
 					allDurations = append(allDurations, dur)
 					delete(connStarts, *ev.ConnectionID)
@@ -831,8 +828,8 @@ func RunClients(lf *logfile.LogFile, opts *Options) {
 			driverVer := "UNKNOWN"
 			appName := "UNKNOWN"
 
-			if docMap, ok := attr["doc"].(map[string]interface{}); ok {
-				if driverMap, ok := docMap["driver"].(map[string]interface{}); ok {
+			if docMap, ok := attr["doc"].(map[string]any); ok {
+				if driverMap, ok := docMap["driver"].(map[string]any); ok {
 					if n, ok := driverMap["name"].(string); ok && n != "" {
 						driverName = n
 					}
@@ -840,13 +837,13 @@ func RunClients(lf *logfile.LogFile, opts *Options) {
 						driverVer = v
 					}
 				}
-				if appMap, ok := docMap["application"].(map[string]interface{}); ok {
+				if appMap, ok := docMap["application"].(map[string]any); ok {
 					if a, ok := appMap["name"].(string); ok && a != "" {
 						appName = a
 					}
 				}
-			} else if clientMeta, ok := attr["clientMetadata"].(map[string]interface{}); ok {
-				if driverMap, ok := clientMeta["driver"].(map[string]interface{}); ok {
+			} else if clientMeta, ok := attr["clientMetadata"].(map[string]any); ok {
+				if driverMap, ok := clientMeta["driver"].(map[string]any); ok {
 					if n, ok := driverMap["name"].(string); ok && n != "" {
 						driverName = n
 					}
@@ -854,7 +851,7 @@ func RunClients(lf *logfile.LogFile, opts *Options) {
 						driverVer = v
 					}
 				}
-				if appMap, ok := clientMeta["application"].(map[string]interface{}); ok {
+				if appMap, ok := clientMeta["application"].(map[string]any); ok {
 					if a, ok := appMap["name"].(string); ok && a != "" {
 						appName = a
 					}

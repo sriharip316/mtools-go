@@ -33,7 +33,7 @@ func LoadState(dir string) (*StartupState, error) {
 		state.StartupInfo = make(map[string]string)
 	}
 	if state.ParsedArgs == nil {
-		state.ParsedArgs = make(map[string]interface{})
+		state.ParsedArgs = make(map[string]any)
 	}
 
 	return &state, nil

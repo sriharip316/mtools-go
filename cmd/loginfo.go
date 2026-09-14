@@ -47,7 +47,7 @@ connections, restarts, transactions, cursors, sharding, and client metadata.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				cmd.Usage()
-				return errors.New("At least one logfile argument must be provided")
+				return errors.New("at least one logfile argument must be provided")
 			}
 
 			enableColor, err := ui.ResolveEnabled(colorFlag, noColorFlag)

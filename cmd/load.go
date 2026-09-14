@@ -14,20 +14,20 @@ import (
 // NewLoadCmd creates the `load` cobra command for test data simulation.
 func NewLoadCmd() *cobra.Command {
 	var (
-		uri          string
-		database     string
-		schemaFile   string
-		loadDurStr   string
-		durationStr  string
-		rateStr      string
-		minRate      float64
-		maxRate      float64
-		intervalStr  string
-		batchSize    int
-		workers      int
-		drop         bool
-		dryRun       bool
-		jsonOut      bool
+		uri         string
+		database    string
+		schemaFile  string
+		loadDurStr  string
+		durationStr string
+		rateStr     string
+		minRate     float64
+		maxRate     float64
+		intervalStr string
+		batchSize   int
+		workers     int
+		drop        bool
+		dryRun      bool
+		jsonOut     bool
 	)
 
 	cmd := &cobra.Command{

@@ -147,7 +147,7 @@ func parseStartupCmd(port int, cmdStr string) NodeInfo {
 		}
 	}
 
-	for i := 0; i < len(parts); i++ {
+	for i := range parts {
 		switch parts[i] {
 		case "--dbpath":
 			if i+1 < len(parts) {
@@ -170,8 +170,8 @@ func parseStartupCmd(port int, cmdStr string) NodeInfo {
 
 	// Try extracting shard name from dbpath if not yet set
 	if info.ShardName == "" && strings.Contains(info.DBPath, "shard") {
-		parts := strings.Split(info.DBPath, string(filepath.Separator))
-		for _, part := range parts {
+		parts := strings.SplitSeq(info.DBPath, string(filepath.Separator))
+		for part := range parts {
 			if strings.HasPrefix(part, "shard") {
 				info.ShardName = part
 				break

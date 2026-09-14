@@ -66,7 +66,7 @@ func (g *Generator) GenerateUpdatePatch(schema *JSONSchema) bson.M {
 			})
 			g.mu.Unlock()
 
-			for i := 0; i < numFields; i++ {
+			for i := range numFields {
 				field := mutableFields[i]
 				setFields[field] = g.GenerateValue(schema.Properties[field])
 			}
@@ -90,7 +90,7 @@ func (g *Generator) GenerateMissQuery() bson.M {
 }
 
 // GenerateValue recursively generates a value matching a JSONSchema.
-func (g *Generator) GenerateValue(schema *JSONSchema) interface{} {
+func (g *Generator) GenerateValue(schema *JSONSchema) any {
 	if schema == nil {
 		return nil
 	}
@@ -123,7 +123,7 @@ func (g *Generator) GenerateValue(schema *JSONSchema) interface{} {
 	switch t := schema.Type.(type) {
 	case string:
 		typeName = t
-	case []interface{}:
+	case []any:
 		if len(t) > 0 {
 			if s, ok := t[0].(string); ok {
 				typeName = s
@@ -299,7 +299,7 @@ func (g *Generator) generateString(schema *JSONSchema) string {
 	return sb.String()
 }
 
-func (g *Generator) generateFormat(format string) interface{} {
+func (g *Generator) generateFormat(format string) any {
 	switch strings.ToLower(format) {
 	case "date-time", "datetime":
 		g.mu.Lock()
@@ -326,7 +326,7 @@ func (g *Generator) generateFormat(format string) interface{} {
 	}
 }
 
-func (g *Generator) generateFaker(faker string) interface{} {
+func (g *Generator) generateFaker(faker string) any {
 	switch strings.ToLower(faker) {
 	case "firstname", "first_name":
 		return g.pickRandom(firstNames)

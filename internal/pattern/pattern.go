@@ -17,7 +17,7 @@ import (
 // entry represents a single key-value pair within a sortedMap.
 type entry struct {
 	key   string
-	value interface{}
+	value any
 }
 
 // sortedMap is an ordered slice of key-value pairs sorted alphabetically by key.
@@ -32,7 +32,7 @@ func (sm sortedMap) MarshalJSON() ([]byte, error) {
 
 // patternList represents a JSON array in a pattern.
 // It implements json.Marshaler to format array elements with Python-compatible separators.
-type patternList []interface{}
+type patternList []any
 
 // MarshalJSON marshals the patternList into JSON with Python-compatible separators.
 func (pl patternList) MarshalJSON() ([]byte, error) {
@@ -40,7 +40,7 @@ func (pl patternList) MarshalJSON() ([]byte, error) {
 }
 
 // marshalJSONNoEscape encodes a value into JSON bytes without escaping HTML characters.
-func marshalJSONNoEscape(v interface{}) ([]byte, error) {
+func marshalJSONNoEscape(v any) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
@@ -56,7 +56,7 @@ func marshalJSONNoEscape(v interface{}) ([]byte, error) {
 
 // serializePattern converts a normalized pattern data structure into a string
 // matching Python's json.dumps(sort_keys=True, separators=(", ", ": ")).
-func serializePattern(v interface{}) string {
+func serializePattern(v any) string {
 	switch val := v.(type) {
 	case sortedMap:
 		var buf bytes.Buffer
@@ -101,13 +101,13 @@ func serializePattern(v interface{}) string {
 // - Maps have their keys sorted alphabetically and values recursively normalized.
 // - Non-empty slices keep only the first element (recursively normalized); empty slices remain empty.
 // - All other types (strings, numbers, booleans, nil) are replaced with the integer 1.
-func normalize(v interface{}) interface{} {
+func normalize(v any) any {
 	if v == nil {
 		return 1
 	}
 
 	switch val := v.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		keys := make([]string, 0, len(val))
 		for k := range val {
 			keys = append(keys, k)
@@ -122,7 +122,7 @@ func normalize(v interface{}) interface{} {
 		}
 		return sm
 
-	case []interface{}:
+	case []any:
 		if len(val) == 0 {
 			return patternList{}
 		}
@@ -178,7 +178,7 @@ func normalize(v interface{}) interface{} {
 //
 //	JSON2Pattern(map[string]interface{}{"b": "hello", "a": 42})
 //	// Returns: `{"a": 1, "b": 1}`
-func JSON2Pattern(v interface{}) string {
+func JSON2Pattern(v any) string {
 	norm := normalize(v)
 	return serializePattern(norm)
 }
@@ -188,7 +188,7 @@ func JSON2Pattern(v interface{}) string {
 //
 // Returns an error if the input string is not valid JSON.
 func JSON2PatternFromString(s string) (string, error) {
-	var v interface{}
+	var v any
 	if err := json.Unmarshal([]byte(s), &v); err != nil {
 		return "", err
 	}

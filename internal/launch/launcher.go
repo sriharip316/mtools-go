@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -63,7 +64,7 @@ func Init(opts *ClusterOptions) error {
 	state := &StartupState{
 		ProtocolVersion: ProtocolVersion,
 		MtoolsVersion:   "0.1.0",
-		ParsedArgs:      make(map[string]interface{}),
+		ParsedArgs:      make(map[string]any),
 		StartupInfo:     make(map[string]string),
 	}
 
@@ -632,11 +633,12 @@ func Start(dir string, binaryPath string, tags []string, verbose bool) error {
 
 	for _, n := range targets {
 		if n.Status == "down" {
-			if n.ProcessType == "config" {
+			switch n.ProcessType {
+			case "config":
 				configNodes = append(configNodes, n)
-			} else if n.ProcessType == "mongos" {
+			case "mongos":
 				mongosNodes = append(mongosNodes, n)
-			} else {
+			default:
 				mongodNodes = append(mongodNodes, n)
 			}
 		}
@@ -760,13 +762,7 @@ func Kill(dir string, signalStr string, tags []string, verbose bool) error {
 func waitForPIDsExit(pids []int, timeout time.Duration) {
 	start := time.Now()
 	for {
-		allDead := true
-		for _, pid := range pids {
-			if isPIDAlive(pid) {
-				allDead = false
-				break
-			}
-		}
+		allDead := !slices.ContainsFunc(pids, isPIDAlive)
 		if allDead || time.Since(start) > timeout {
 			break
 		}

@@ -20,7 +20,7 @@ func TestStateSaveAndLoad(t *testing.T) {
 	state := &StartupState{
 		ProtocolVersion: ProtocolVersion,
 		MtoolsVersion:   "0.1.0",
-		ParsedArgs: map[string]interface{}{
+		ParsedArgs: map[string]any{
 			"dir":  tmpDir,
 			"port": float64(27017),
 		},
@@ -60,7 +60,7 @@ func TestBuildReplSetDoc(t *testing.T) {
 		t.Errorf("expected _id testrs, got %v", doc["_id"])
 	}
 
-	members, ok := doc["members"].([]map[string]interface{})
+	members, ok := doc["members"].([]map[string]any)
 	if !ok {
 		// Or bson.M slice
 		if ms, ok2 := doc["members"].([]struct{}); ok2 {

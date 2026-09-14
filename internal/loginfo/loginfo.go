@@ -129,8 +129,8 @@ func ExtractMetadata(lf *logfile.LogFile) (*LogMetadata, error) {
 
 		// Options set by command line
 		if ev.Msg == "Options set by command line" || ev.ID == 22315 || ev.ID == 51233 {
-			if optsMap, ok := attr["options"].(map[string]interface{}); ok {
-				if netMap, ok := optsMap["net"].(map[string]interface{}); ok {
+			if optsMap, ok := attr["options"].(map[string]any); ok {
+				if netMap, ok := optsMap["net"].(map[string]any); ok {
 					if meta.Port == "" {
 						if p, ok := netMap["port"].(float64); ok {
 							meta.Port = strconv.Itoa(int(p))
@@ -139,17 +139,17 @@ func ExtractMetadata(lf *logfile.LogFile) (*LogMetadata, error) {
 						}
 					}
 				}
-				if shardingMap, ok := optsMap["sharding"].(map[string]interface{}); ok {
+				if shardingMap, ok := optsMap["sharding"].(map[string]any); ok {
 					if cr, ok := shardingMap["clusterRole"].(string); ok {
 						meta.ClusterRole = cr
 					}
 				}
-				if storageMap, ok := optsMap["storage"].(map[string]interface{}); ok {
+				if storageMap, ok := optsMap["storage"].(map[string]any); ok {
 					if eng, ok := storageMap["engine"].(string); ok {
 						meta.StorageEngine = eng
 					}
 				}
-				if replMap, ok := optsMap["replication"].(map[string]interface{}); ok {
+				if replMap, ok := optsMap["replication"].(map[string]any); ok {
 					if rs, ok := replMap["replSetName"].(string); ok {
 						meta.ReplSet = rs
 					}
@@ -166,7 +166,7 @@ func ExtractMetadata(lf *logfile.LogFile) (*LogMetadata, error) {
 			}
 
 			ver := ""
-			if buildInfo, ok := attr["buildInfo"].(map[string]interface{}); ok {
+			if buildInfo, ok := attr["buildInfo"].(map[string]any); ok {
 				if v, ok := buildInfo["version"].(string); ok {
 					ver = v
 				}
@@ -188,7 +188,7 @@ func ExtractMetadata(lf *logfile.LogFile) (*LogMetadata, error) {
 
 		// Replica set config detection
 		if strings.Contains(ev.Msg, "replica set config") || strings.Contains(ev.Msg, "Replica set config") || ev.ID == 21333 || ev.ID == 21334 {
-			if cfgMap, ok := attr["config"].(map[string]interface{}); ok {
+			if cfgMap, ok := attr["config"].(map[string]any); ok {
 				if id, ok := cfgMap["_id"].(string); ok {
 					meta.ReplSet = id
 				}
@@ -198,10 +198,10 @@ func ExtractMetadata(lf *logfile.LogFile) (*LogMetadata, error) {
 				if pv, ok := cfgMap["protocolVersion"].(float64); ok {
 					meta.ReplSetProtocol = strconv.Itoa(int(pv))
 				}
-				if members, ok := cfgMap["members"].([]interface{}); ok {
+				if members, ok := cfgMap["members"].([]any); ok {
 					var memberStrs []string
 					for _, m := range members {
-						if mMap, ok := m.(map[string]interface{}); ok {
+						if mMap, ok := m.(map[string]any); ok {
 							host, _ := mMap["host"].(string)
 							idVal := mMap["_id"]
 							memberStrs = append(memberStrs, fmt.Sprintf("{ _id: %v, host: %q }", idVal, host))
@@ -222,11 +222,12 @@ func ExtractMetadata(lf *logfile.LogFile) (*LogMetadata, error) {
 		meta.Binary = "mongod"
 	}
 	if meta.Port == "" {
-		if meta.ClusterRole == "shardsvr" {
+		switch meta.ClusterRole {
+		case "shardsvr":
 			meta.Port = "27018"
-		} else if meta.ClusterRole == "configsvr" {
+		case "configsvr":
 			meta.Port = "27019"
-		} else {
+		default:
 			meta.Port = "27017"
 		}
 	}

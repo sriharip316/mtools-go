@@ -3,6 +3,7 @@ package load
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -55,12 +56,9 @@ func (s *OpStats) Percentile(p float64) time.Duration {
 	}
 	sorted := make([]time.Duration, len(s.Samples))
 	copy(sorted, s.Samples)
-	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	slices.Sort(sorted)
 
-	idx := int(float64(len(sorted)-1) * (p / 100.0))
-	if idx < 0 {
-		idx = 0
-	}
+	idx := max(int(float64(len(sorted)-1)*(p/100.0)), 0)
 	if idx >= len(sorted) {
 		idx = len(sorted) - 1
 	}
@@ -69,23 +67,23 @@ func (s *OpStats) Percentile(p float64) time.Duration {
 
 // StatsTracker aggregates real-time and cumulative simulation statistics.
 type StatsTracker struct {
-	startTime time.Time
-	isPhase2  bool
+	startTime  time.Time
+	isPhase2   bool
 	phase2Time time.Time
 
 	mu sync.Mutex
 
 	// Counters
-	initLoadDocs   int64
-	totalOps       int64
-	createOps      int64
-	readHits       int64
-	readMisses     int64
-	updateOps      int64
-	deleteOps      int64
-	errorCount     int64
-	lastError      string
-	collectionOps  map[string]int64
+	initLoadDocs  int64
+	totalOps      int64
+	createOps     int64
+	readHits      int64
+	readMisses    int64
+	updateOps     int64
+	deleteOps     int64
+	errorCount    int64
+	lastError     string
+	collectionOps map[string]int64
 
 	// Latencies
 	initLoadLat *OpStats
@@ -132,7 +130,7 @@ func (st *StatsTracker) RecordInitLoad(coll string, lat time.Duration, count int
 	st.initLoadDocs += count
 	st.totalOps += count
 	st.collectionOps[coll] += count
-	for i := int64(0); i < count; i++ {
+	for range count {
 		st.initLoadLat.Record(lat)
 	}
 }
@@ -203,19 +201,19 @@ func (st *StatsTracker) IntervalReport(targetRate float64, jsonOut bool) {
 	elapsedStr := formatElapsed(elapsedTotal)
 
 	if jsonOut {
-		data := map[string]interface{}{
-			"elapsed":       elapsedTotal.String(),
-			"phase":         map[bool]string{false: "INIT_LOAD", true: "CRUD"}[st.isPhase2],
-			"rate":          instantRate,
-			"target_rate":   targetRate,
-			"total_ops":     st.totalOps,
-			"init_docs":     st.initLoadDocs,
-			"create_ops":    st.createOps,
-			"read_hits":     st.readHits,
-			"read_misses":   st.readMisses,
-			"update_ops":    st.updateOps,
-			"delete_ops":    st.deleteOps,
-			"errors":        st.errorCount,
+		data := map[string]any{
+			"elapsed":     elapsedTotal.String(),
+			"phase":       map[bool]string{false: "INIT_LOAD", true: "CRUD"}[st.isPhase2],
+			"rate":        instantRate,
+			"target_rate": targetRate,
+			"total_ops":   st.totalOps,
+			"init_docs":   st.initLoadDocs,
+			"create_ops":  st.createOps,
+			"read_hits":   st.readHits,
+			"read_misses": st.readMisses,
+			"update_ops":  st.updateOps,
+			"delete_ops":  st.deleteOps,
+			"errors":      st.errorCount,
 		}
 		jsonBytes, _ := json.Marshal(data)
 		fmt.Println(string(jsonBytes))

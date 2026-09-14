@@ -12,13 +12,13 @@ import (
 
 // rawDoc is the internal struct for JSON unmarshaling.
 type rawDoc struct {
-	T    rawTimestamp           `json:"t"`
-	S    string                 `json:"s"`
-	C    string                 `json:"c"`
-	ID   int                    `json:"id"`
-	Ctx  string                 `json:"ctx"`
-	Msg  string                 `json:"msg"`
-	Attr map[string]interface{} `json:"attr"`
+	T    rawTimestamp   `json:"t"`
+	S    string         `json:"s"`
+	C    string         `json:"c"`
+	ID   int            `json:"id"`
+	Ctx  string         `json:"ctx"`
+	Msg  string         `json:"msg"`
+	Attr map[string]any `json:"attr"`
 }
 
 type rawTimestamp struct {
@@ -67,7 +67,7 @@ type LogEvent struct {
 }
 
 // Attr returns the parsed attr map from the log event.
-func (ev *LogEvent) Attr() map[string]interface{} {
+func (ev *LogEvent) Attr() map[string]any {
 	return ev.doc.Attr
 }
 
@@ -155,7 +155,7 @@ func (ev *LogEvent) parseAttr() {
 		ev.AllowDiskUse = b
 	}
 
-	if cmdMap, ok := attr["command"].(map[string]interface{}); ok {
+	if cmdMap, ok := attr["command"].(map[string]any); ok {
 		// First try regex match on raw line for accurate first key
 		matches := firstCommandKeyRegex.FindStringSubmatch(ev.LineStr)
 		if len(matches) > 1 {
@@ -200,8 +200,8 @@ func (ev *LogEvent) parseAttr() {
 
 	if cid := getIntPtr(attr, "connectionId"); cid != nil {
 		ev.ConnectionID = cid
-	} else if strings.HasPrefix(ev.Thread, "conn") {
-		numStr := strings.TrimPrefix(ev.Thread, "conn")
+	} else if after, ok := strings.CutPrefix(ev.Thread, "conn"); ok {
+		numStr := after
 		if n, err := strconv.Atoi(numStr); err == nil {
 			ev.ConnectionID = &n
 		}
@@ -212,8 +212,8 @@ func (ev *LogEvent) parseAttr() {
 	ev.BytesWritten = getInt64Ptr(attr, "bytesWritten")
 	ev.TimeReadingMicros = getInt64Ptr(attr, "timeReadingMicros")
 	ev.TimeWritingMicros = getInt64Ptr(attr, "timeWritingMicros")
-	if storageMap, ok := attr["storage"].(map[string]interface{}); ok {
-		if dataMap, ok := storageMap["data"].(map[string]interface{}); ok {
+	if storageMap, ok := attr["storage"].(map[string]any); ok {
+		if dataMap, ok := storageMap["data"].(map[string]any); ok {
 			if ev.BytesRead == nil {
 				ev.BytesRead = getInt64Ptr(dataMap, "bytesRead")
 			}
@@ -235,7 +235,7 @@ func (ev *LogEvent) parseAttr() {
 	ev.ReadConcern = getStr(attr, "readConcern")
 	ev.TimeActiveMicros = getInt64Ptr(attr, "timeActiveMicros")
 	ev.TimeInactiveMicros = getInt64Ptr(attr, "timeInactiveMicros")
-	if paramMap, ok := attr["parameters"].(map[string]interface{}); ok {
+	if paramMap, ok := attr["parameters"].(map[string]any); ok {
 		if ev.TxnNumber == nil {
 			ev.TxnNumber = getInt64Ptr(paramMap, "txnNumber")
 		}
@@ -243,7 +243,7 @@ func (ev *LogEvent) parseAttr() {
 			ev.Autocommit = getBoolPtr(paramMap, "autocommit")
 		}
 		if ev.ReadConcern == "" {
-			if rcMap, ok := paramMap["readConcern"].(map[string]interface{}); ok {
+			if rcMap, ok := paramMap["readConcern"].(map[string]any); ok {
 				ev.ReadConcern = getStr(rcMap, "level")
 			} else {
 				ev.ReadConcern = getStr(paramMap, "readConcern")
@@ -295,7 +295,7 @@ func cleanIP(addr string) string {
 	return addr
 }
 
-func getStr(m map[string]interface{}, key string) string {
+func getStr(m map[string]any, key string) string {
 	if v, ok := m[key]; ok {
 		if s, ok := v.(string); ok {
 			return s
@@ -304,7 +304,7 @@ func getStr(m map[string]interface{}, key string) string {
 	return ""
 }
 
-func getIntPtr(m map[string]interface{}, key string) *int {
+func getIntPtr(m map[string]any, key string) *int {
 	if v, ok := m[key]; ok {
 		switch num := v.(type) {
 		case float64:
@@ -320,7 +320,7 @@ func getIntPtr(m map[string]interface{}, key string) *int {
 	return nil
 }
 
-func getInt64Ptr(m map[string]interface{}, key string) *int64 {
+func getInt64Ptr(m map[string]any, key string) *int64 {
 	if v, ok := m[key]; ok {
 		switch num := v.(type) {
 		case float64:
@@ -336,7 +336,7 @@ func getInt64Ptr(m map[string]interface{}, key string) *int64 {
 	return nil
 }
 
-func getBoolPtr(m map[string]interface{}, key string) *bool {
+func getBoolPtr(m map[string]any, key string) *bool {
 	if v, ok := m[key]; ok {
 		if b, ok := v.(bool); ok {
 			return &b

@@ -127,10 +127,7 @@ func (rl *RateLimiter) Wait(ctx context.Context) error {
 		}
 		rl.mu.Unlock()
 
-		sleepDur := time.Duration(sleepSec * float64(time.Second))
-		if sleepDur > 50*time.Millisecond {
-			sleepDur = 50 * time.Millisecond
-		}
+		sleepDur := min(time.Duration(sleepSec*float64(time.Second)), 50*time.Millisecond)
 
 		select {
 		case <-ctx.Done():

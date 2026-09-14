@@ -26,13 +26,13 @@ func DefaultCRUDWeights() CRUDWeights {
 
 // JSONSchema represents a JSON schema definition with generator metadata.
 type JSONSchema struct {
-	Type                 interface{}            `json:"type,omitempty"` // string or []string
+	Type                 any                    `json:"type,omitempty"` // string or []string
 	Title                string                 `json:"title,omitempty"`
 	Description          string                 `json:"description,omitempty"`
 	Properties           map[string]*JSONSchema `json:"properties,omitempty"`
 	Required             []string               `json:"required,omitempty"`
 	Items                *JSONSchema            `json:"items,omitempty"`
-	Enum                 []interface{}          `json:"enum,omitempty"`
+	Enum                 []any                  `json:"enum,omitempty"`
 	Minimum              *float64               `json:"minimum,omitempty"`
 	Maximum              *float64               `json:"maximum,omitempty"`
 	ExclusiveMinimum     *float64               `json:"exclusiveMinimum,omitempty"`
@@ -43,17 +43,17 @@ type JSONSchema struct {
 	MaxItems             *int                   `json:"maxItems,omitempty"`
 	Format               string                 `json:"format,omitempty"`
 	Faker                string                 `json:"faker,omitempty"`
-	Default              interface{}            `json:"default,omitempty"`
+	Default              any                    `json:"default,omitempty"`
 	Pattern              string                 `json:"pattern,omitempty"`
-	AdditionalProperties interface{}            `json:"additionalProperties,omitempty"`
+	AdditionalProperties any                    `json:"additionalProperties,omitempty"`
 }
 
 // CollectionConfig represents configuration for a specific collection in the simulation.
 type CollectionConfig struct {
-	Name    string       `json:"name"`
-	Weight  float64      `json:"weight"`
-	CRUD    CRUDWeights  `json:"crud"`
-	Schema  *JSONSchema  `json:"schema"`
+	Name   string      `json:"name"`
+	Weight float64     `json:"weight"`
+	CRUD   CRUDWeights `json:"crud"`
+	Schema *JSONSchema `json:"schema"`
 }
 
 // SchemaConfig represents the complete multi-collection schema configuration.
@@ -64,29 +64,29 @@ type SchemaConfig struct {
 
 // rawCollectionConfig is used for parsing collections when specified as an array.
 type rawCollectionConfig struct {
-	Name    string          `json:"name"`
-	Weight  *float64        `json:"weight,omitempty"`
-	Ratio   *float64        `json:"ratio,omitempty"`
-	Percent *float64        `json:"percent,omitempty"`
-	CRUD    *CRUDWeights    `json:"crud,omitempty"`
-	Schema  *JSONSchema     `json:"schema,omitempty"`
+	Name    string       `json:"name"`
+	Weight  *float64     `json:"weight,omitempty"`
+	Ratio   *float64     `json:"ratio,omitempty"`
+	Percent *float64     `json:"percent,omitempty"`
+	CRUD    *CRUDWeights `json:"crud,omitempty"`
+	Schema  *JSONSchema  `json:"schema,omitempty"`
 	// Also support inline schema definition (if schema fields are directly inside the collection object)
-	Type       interface{}            `json:"type,omitempty"`
+	Type       any                    `json:"type,omitempty"`
 	Properties map[string]*JSONSchema `json:"properties,omitempty"`
 	Required   []string               `json:"required,omitempty"`
 }
 
 // rawSchemaConfig is an intermediate struct for detecting various JSON schema layouts.
 type rawSchemaConfig struct {
-	Database    string                          `json:"database,omitempty"`
-	Collections json.RawMessage                 `json:"collections,omitempty"`
+	Database    string          `json:"database,omitempty"`
+	Collections json.RawMessage `json:"collections,omitempty"`
 	// Single collection fields at root
-	Type        interface{}                     `json:"type,omitempty"`
-	Title       string                          `json:"title,omitempty"`
-	Properties  map[string]*JSONSchema          `json:"properties,omitempty"`
-	Required    []string                        `json:"required,omitempty"`
-	CRUD        *CRUDWeights                    `json:"crud,omitempty"`
-	Weight      *float64                        `json:"weight,omitempty"`
+	Type       any                    `json:"type,omitempty"`
+	Title      string                 `json:"title,omitempty"`
+	Properties map[string]*JSONSchema `json:"properties,omitempty"`
+	Required   []string               `json:"required,omitempty"`
+	CRUD       *CRUDWeights           `json:"crud,omitempty"`
+	Weight     *float64               `json:"weight,omitempty"`
 }
 
 // DefaultSchema returns the default baked-in 2-collection schema (users and orders).
@@ -130,16 +130,16 @@ func DefaultSchema() *SchemaConfig {
 						},
 						"age": {
 							Type:    "integer",
-							Minimum: floatPtr(18),
-							Maximum: floatPtr(75),
+							Minimum: new(float64(18)),
+							Maximum: new(float64(75)),
 						},
 						"status": {
 							Type: "string",
-							Enum: []interface{}{"active", "inactive", "pending", "suspended"},
+							Enum: []any{"active", "inactive", "pending", "suspended"},
 						},
 						"role": {
 							Type: "string",
-							Enum: []interface{}{"customer", "admin", "moderator", "guest"},
+							Enum: []any{"customer", "admin", "moderator", "guest"},
 						},
 						"address": {
 							Type: "object",
@@ -152,11 +152,11 @@ func DefaultSchema() *SchemaConfig {
 						},
 						"tags": {
 							Type:     "array",
-							MinItems: intPtr(1),
-							MaxItems: intPtr(4),
+							MinItems: new(1),
+							MaxItems: new(4),
 							Items: &JSONSchema{
 								Type: "string",
-								Enum: []interface{}{"premium", "beta-tester", "verified", "newsletter", "vip"},
+								Enum: []any{"premium", "beta-tester", "verified", "newsletter", "vip"},
 							},
 						},
 						"createdAt": {
@@ -196,35 +196,35 @@ func DefaultSchema() *SchemaConfig {
 						},
 						"status": {
 							Type: "string",
-							Enum: []interface{}{"pending", "processing", "shipped", "delivered", "cancelled"},
+							Enum: []any{"pending", "processing", "shipped", "delivered", "cancelled"},
 						},
 						"items": {
 							Type:     "array",
-							MinItems: intPtr(1),
-							MaxItems: intPtr(5),
+							MinItems: new(1),
+							MaxItems: new(5),
 							Items: &JSONSchema{
 								Type: "object",
 								Properties: map[string]*JSONSchema{
 									"productId": {Type: "string", Format: "uuid"},
 									"name":      {Type: "string", Faker: "product"},
-									"quantity":  {Type: "integer", Minimum: floatPtr(1), Maximum: floatPtr(10)},
-									"price":     {Type: "number", Minimum: floatPtr(4.99), Maximum: floatPtr(499.99)},
+									"quantity":  {Type: "integer", Minimum: new(float64(1)), Maximum: new(float64(10))},
+									"price":     {Type: "number", Minimum: new(4.99), Maximum: new(499.99)},
 								},
 								Required: []string{"productId", "name", "quantity", "price"},
 							},
 						},
 						"totalAmount": {
 							Type:    "number",
-							Minimum: floatPtr(10.0),
-							Maximum: floatPtr(2500.0),
+							Minimum: new(10.0),
+							Maximum: new(2500.0),
 						},
 						"currency": {
 							Type: "string",
-							Enum: []interface{}{"USD", "EUR", "GBP", "CAD", "JPY"},
+							Enum: []any{"USD", "EUR", "GBP", "CAD", "JPY"},
 						},
 						"paymentMethod": {
 							Type: "string",
-							Enum: []interface{}{"credit_card", "debit_card", "paypal", "apple_pay", "bank_transfer"},
+							Enum: []any{"credit_card", "debit_card", "paypal", "apple_pay", "bank_transfer"},
 						},
 						"shippingAddress": {
 							Type: "object",
@@ -405,6 +405,3 @@ func parseRawCollection(item rawCollectionConfig) (CollectionConfig, error) {
 		Schema: schema,
 	}, nil
 }
-
-func floatPtr(v float64) *float64 { return &v }
-func intPtr(v int) *int          { return &v }

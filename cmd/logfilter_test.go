@@ -246,8 +246,8 @@ func TestLogfilter_Shorten(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimSpace(out), "\n")
-	for _, l := range lines {
+	lines := strings.SplitSeq(strings.TrimSpace(out), "\n")
+	for l := range lines {
 		if len(l) > 50 {
 			t.Errorf("line length %d exceeds 50: %s", len(l), l)
 		}

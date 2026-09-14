@@ -9,18 +9,14 @@ import (
 	"github.com/sriharip316/mtools-go/internal/logevent"
 )
 
-func intPtr(i int) *int {
-	return &i
-}
-
 func TestSlowFastFilter(t *testing.T) {
 	slow := &SlowFilter{ThresholdMs: 100}
 	fast := &FastFilter{ThresholdMs: 100}
 
 	evNoDuration := &logevent.LogEvent{}
-	ev50 := &logevent.LogEvent{Duration: intPtr(50)}
-	ev100 := &logevent.LogEvent{Duration: intPtr(100)}
-	ev150 := &logevent.LogEvent{Duration: intPtr(150)}
+	ev50 := &logevent.LogEvent{Duration: new(50)}
+	ev100 := &logevent.LogEvent{Duration: new(100)}
+	ev150 := &logevent.LogEvent{Duration: new(150)}
 
 	if slow.Accept(evNoDuration) {
 		t.Errorf("slow should reject nil duration")
@@ -59,10 +55,10 @@ func TestTableScanFilter(t *testing.T) {
 	scan := &TableScanFilter{}
 
 	evNil := &logevent.LogEvent{}
-	evLowScanned := &logevent.LogEvent{NScanned: intPtr(5000), NReturned: intPtr(1)}
-	evLowRatio := &logevent.LogEvent{NScanned: intPtr(20000), NReturned: intPtr(500)}   // ratio 40
-	evHighRatio := &logevent.LogEvent{NScanned: intPtr(20000), NReturned: intPtr(10)}   // ratio 2000
-	evZeroReturned := &logevent.LogEvent{NScanned: intPtr(20000), NReturned: intPtr(0)} // ratio 20000
+	evLowScanned := &logevent.LogEvent{NScanned: new(5000), NReturned: new(1)}
+	evLowRatio := &logevent.LogEvent{NScanned: new(20000), NReturned: new(500)}   // ratio 40
+	evHighRatio := &logevent.LogEvent{NScanned: new(20000), NReturned: new(10)}   // ratio 2000
+	evZeroReturned := &logevent.LogEvent{NScanned: new(20000), NReturned: new(0)} // ratio 20000
 
 	if scan.Accept(evNil) {
 		t.Errorf("scan should reject nil counters")
@@ -405,7 +401,7 @@ func TestHighlighters(t *testing.T) {
 		Namespace:   "mydb.orders",
 		Command:     "find",
 		PlanSummary: "COLLSCAN",
-		Duration:    intPtr(1200),
+		Duration:    new(1200),
 	}
 
 	// WordFilter highlighter

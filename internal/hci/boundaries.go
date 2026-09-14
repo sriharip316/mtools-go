@@ -230,12 +230,9 @@ func (dtb *DateTimeBoundaries) String2DT(s string, lowerBound *time.Time) (time.
 			t = anchor
 		} else if !hasDate && timeParsed {
 			t = time.Date(anchor.Year(), anchor.Month(), anchor.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.UTC)
-			hasDate = true
-			hasYear = true
 		} else if hasDate && timeParsed {
 			if !hasYear {
 				t = time.Date(anchor.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.UTC)
-				hasYear = true
 			}
 		}
 	} else {
@@ -245,7 +242,6 @@ func (dtb *DateTimeBoundaries) String2DT(s string, lowerBound *time.Time) (time.
 			} else {
 				t = time.Date(dtb.Start.Year(), dtb.Start.Month(), dtb.Start.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.UTC)
 			}
-			hasYear = true
 		} else if !hasYear {
 			t = time.Date(dtb.End.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.UTC)
 
