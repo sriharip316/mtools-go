@@ -42,7 +42,7 @@ func PrintTable(nodes []NodeInfo, showTags, showStartup, verbose bool) {
 		headers = append(headers, "STARTUP COMMAND")
 	}
 
-	fmt.Fprintln(w, strings.Join(headers, "\t"))
+	_, _ = fmt.Fprintln(w, strings.Join(headers, "\t"))
 
 	for _, n := range nodes {
 		procName := n.ProcessType
@@ -72,8 +72,8 @@ func PrintTable(nodes []NodeInfo, showTags, showStartup, verbose bool) {
 			row = append(row, n.StartupCmd)
 		}
 
-		fmt.Fprintln(w, strings.Join(row, "\t"))
+		_, _ = fmt.Fprintln(w, strings.Join(row, "\t"))
 	}
 
-	w.Flush()
+	_ = w.Flush()
 }

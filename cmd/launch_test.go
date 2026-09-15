@@ -21,15 +21,16 @@ func executeLaunchCommand(args ...string) (string, error) {
 	// Capture stdout
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
+	defer func() { _ = r.Close() }()
 	os.Stdout = w
 
 	err := cmd.Execute()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 
 	return outBuf.String(), err
 }
@@ -63,11 +64,7 @@ func getMongoDBBinaryPath(t *testing.T) string {
 
 func TestLaunch_SingleLifecycle(t *testing.T) {
 	binPath := getMongoDBBinaryPath(t)
-	tmpDir, err := os.MkdirTemp("", "launch_test_single_*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	port := "27200"
 
@@ -116,11 +113,7 @@ func TestLaunch_SingleLifecycle(t *testing.T) {
 
 func TestLaunch_ReplicaSetLifecycle(t *testing.T) {
 	binPath := getMongoDBBinaryPath(t)
-	tmpDir, err := os.MkdirTemp("", "launch_test_rs_*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	port := "27210"
 
@@ -145,11 +138,7 @@ func TestLaunch_ReplicaSetLifecycle(t *testing.T) {
 
 func TestLaunch_ShardedClusterLifecycle(t *testing.T) {
 	binPath := getMongoDBBinaryPath(t)
-	tmpDir, err := os.MkdirTemp("", "launch_test_sh_*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	port := "27230"
 

@@ -288,7 +288,7 @@ func printMetadataTo(w io.Writer, meta *LogMetadata, style ui.Style) {
 		}
 	}
 	for _, r := range rows {
-		fmt.Fprintf(w, "%s %s\n", style.Cyan(fmt.Sprintf("%*s", width, r[0])), r[1])
+		_, _ = fmt.Fprintf(w, "%s %s\n", style.Cyan(fmt.Sprintf("%*s", width, r[0])), r[1])
 	}
 }
 

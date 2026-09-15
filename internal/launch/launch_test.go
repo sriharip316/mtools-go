@@ -1,17 +1,12 @@
 package launch
 
 import (
-	"os"
 	"syscall"
 	"testing"
 )
 
 func TestStateSaveAndLoad(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "launch_state_test_*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	if StateExists(tmpDir) {
 		t.Errorf("expected state to not exist yet")

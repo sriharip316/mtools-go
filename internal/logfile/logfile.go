@@ -30,7 +30,7 @@ func Open(path string) (*LogFile, error) {
 
 	info, err := f.Stat()
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, err
 	}
 
@@ -43,7 +43,7 @@ func Open(path string) (*LogFile, error) {
 	}
 
 	if err := lf.calculateBounds(); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, err
 	}
 
@@ -97,7 +97,7 @@ func (lf *LogFile) FastForward(target time.Time) {
 	}
 
 	if !lf.Start.IsZero() && !target.After(lf.Start) {
-		lf.file.Seek(0, io.SeekStart)
+		_, _ = lf.file.Seek(0, io.SeekStart)
 		lf.reader.Reset(lf.file)
 		return
 	}
@@ -107,7 +107,7 @@ func (lf *LogFile) FastForward(target time.Time) {
 
 	for high-low > 4096 {
 		mid := low + (high-low)/2
-		lf.file.Seek(mid, io.SeekStart)
+		_, _ = lf.file.Seek(mid, io.SeekStart)
 		lf.reader.Reset(lf.file)
 
 		// Discard partial line
@@ -128,7 +128,7 @@ func (lf *LogFile) FastForward(target time.Time) {
 	}
 
 	// Linear scan from 'low' to find the exact first line >= target
-	lf.file.Seek(low, io.SeekStart)
+	_, _ = lf.file.Seek(low, io.SeekStart)
 	lf.reader.Reset(lf.file)
 	if low > 0 {
 		// Discard partial line if we seeked to mid-file
@@ -152,7 +152,7 @@ func (lf *LogFile) FastForward(target time.Time) {
 
 		if !ev.DateTime.Before(target) {
 			// Found first line >= target! Seek directly to its start
-			lf.file.Seek(linePos, io.SeekStart)
+			_, _ = lf.file.Seek(linePos, io.SeekStart)
 			lf.reader.Reset(lf.file)
 			return
 		}
@@ -166,7 +166,9 @@ func (lf *LogFile) calculateBounds() error {
 	}
 
 	// 1. Find Start timestamp from beginning
-	lf.file.Seek(0, io.SeekStart)
+	if _, err := lf.file.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
 	lf.reader.Reset(lf.file)
 
 	for range 50 {
@@ -183,7 +185,9 @@ func (lf *LogFile) calculateBounds() error {
 	// 2. Find End timestamp from near end of file
 	tailSize := min(int64(64*1024), lf.FileSize)
 
-	lf.file.Seek(lf.FileSize-tailSize, io.SeekStart)
+	if _, err := lf.file.Seek(lf.FileSize-tailSize, io.SeekStart); err != nil {
+		return err
+	}
 	lf.reader.Reset(lf.file)
 
 	// Discard first partial line if not at file start
@@ -204,7 +208,9 @@ func (lf *LogFile) calculateBounds() error {
 	lf.End = lastDT
 
 	// Reset reader to beginning
-	lf.file.Seek(0, io.SeekStart)
+	if _, err := lf.file.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
 	lf.reader.Reset(lf.file)
 	return nil
 }

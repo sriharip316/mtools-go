@@ -20,19 +20,23 @@ func createTestLogFile(t *testing.T, lines []string) (*logfile.LogFile, func()) 
 	}
 
 	for _, line := range lines {
-		tmp.WriteString(line + "\n")
+		if _, err := tmp.WriteString(line + "\n"); err != nil {
+			_ = tmp.Close()
+			_ = os.Remove(tmp.Name())
+			t.Fatalf("failed to write to temp file: %v", err)
+		}
 	}
-	tmp.Close()
+	_ = tmp.Close()
 
 	lf, err := logfile.Open(tmp.Name())
 	if err != nil {
-		os.Remove(tmp.Name())
+		_ = os.Remove(tmp.Name())
 		t.Fatalf("failed to open logfile: %v", err)
 	}
 
 	cleanup := func() {
-		lf.Close()
-		os.Remove(tmp.Name())
+		_ = lf.Close()
+		_ = os.Remove(tmp.Name())
 	}
 	return lf, cleanup
 }
@@ -40,15 +44,16 @@ func createTestLogFile(t *testing.T, lines []string) (*logfile.LogFile, func()) 
 func captureOutput(f func()) string {
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
+	defer func() { _ = r.Close() }()
 	os.Stdout = w
 
 	f()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 	return buf.String()
 }
 

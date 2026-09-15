@@ -24,10 +24,12 @@ func createSampleLogFile(t *testing.T, filename string) string {
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer tmp.Close()
+	defer func() { _ = tmp.Close() }()
 
 	for _, line := range lines {
-		tmp.WriteString(line + "\n")
+		if _, err := tmp.WriteString(line + "\n"); err != nil {
+			t.Fatalf("failed to write to temp file: %v", err)
+		}
 	}
 
 	return tmp.Name()
@@ -45,22 +47,23 @@ func executeCommand(args ...string) (string, error) {
 	// Capture stdout
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
+	defer func() { _ = r.Close() }()
 	os.Stdout = w
 
 	err := cmd.Execute()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 
 	return outBuf.String(), err
 }
 
 func TestLogfilter_Basic(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath)
 	if err != nil {
@@ -75,7 +78,7 @@ func TestLogfilter_Basic(t *testing.T) {
 
 func TestLogfilter_Slow(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	// Test with explicit threshold
 	out, err := executeCommand(logPath, "--slow", "500")
@@ -103,7 +106,7 @@ func TestLogfilter_Slow(t *testing.T) {
 
 func TestLogfilter_Fast(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--fast", "100")
 	if err != nil {
@@ -119,7 +122,7 @@ func TestLogfilter_Fast(t *testing.T) {
 
 func TestLogfilter_Scan(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--scan")
 	if err != nil {
@@ -138,7 +141,7 @@ func TestLogfilter_Scan(t *testing.T) {
 
 func TestLogfilter_ComponentAndLevel(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--component", "COMMAND", "--level", "W")
 	if err != nil {
@@ -156,7 +159,7 @@ func TestLogfilter_ComponentAndLevel(t *testing.T) {
 
 func TestLogfilter_Namespace(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--namespace", "mydb.orders")
 	if err != nil {
@@ -171,7 +174,7 @@ func TestLogfilter_Namespace(t *testing.T) {
 
 func TestLogfilter_Pattern(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--pattern", `{"age": {"$gt": 1}}`)
 	if err != nil {
@@ -189,7 +192,7 @@ func TestLogfilter_Pattern(t *testing.T) {
 
 func TestLogfilter_Transactions(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--transactions")
 	if err != nil {
@@ -207,7 +210,7 @@ func TestLogfilter_Transactions(t *testing.T) {
 
 func TestLogfilter_TimeRange(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--from", "2023-10-10T10:04:00Z", "--to", "2023-10-10T10:12:00Z")
 	if err != nil {
@@ -223,7 +226,7 @@ func TestLogfilter_TimeRange(t *testing.T) {
 
 func TestLogfilter_Exclude(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--component", "COMMAND", "--exclude")
 	if err != nil {
@@ -239,7 +242,7 @@ func TestLogfilter_Exclude(t *testing.T) {
 
 func TestLogfilter_Shorten(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--shorten", "50")
 	if err != nil {
@@ -256,7 +259,7 @@ func TestLogfilter_Shorten(t *testing.T) {
 
 func TestLogfilter_Human(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeCommand(logPath, "--slow", "1000", "--human")
 	if err != nil {
@@ -280,18 +283,18 @@ func TestLogfilter_MergeMultipleFiles(t *testing.T) {
 	}
 
 	f1, _ := os.CreateTemp("", "f1_*.log")
-	defer os.Remove(f1.Name())
+	defer func() { _ = os.Remove(f1.Name()) }()
 	for _, l := range lines1 {
-		f1.WriteString(l + "\n")
+		_, _ = f1.WriteString(l + "\n")
 	}
-	f1.Close()
+	_ = f1.Close()
 
 	f2, _ := os.CreateTemp("", "f2_*.log")
-	defer os.Remove(f2.Name())
+	defer func() { _ = os.Remove(f2.Name()) }()
 	for _, l := range lines2 {
-		f2.WriteString(l + "\n")
+		_, _ = f2.WriteString(l + "\n")
 	}
-	f2.Close()
+	_ = f2.Close()
 
 	out, err := executeCommand(f1.Name(), f2.Name(), "--markers", "enum")
 	if err != nil {
@@ -321,7 +324,7 @@ func TestLogfilter_MergeMultipleFiles(t *testing.T) {
 func TestLogfilter_Mask(t *testing.T) {
 	// Main log file with lines from 10:00 to 10:20 (same as sample: 10:00, 10:01, 10:05, 10:10, 10:15, 10:20)
 	mainLog := createSampleLogFile(t, "main_log")
-	defer os.Remove(mainLog)
+	defer func() { _ = os.Remove(mainLog) }()
 
 	// Mask file containing 1 event at 10:05:00
 	maskLines := []string{
@@ -331,11 +334,11 @@ func TestLogfilter_Mask(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create mask file: %v", err)
 	}
-	defer os.Remove(maskLog.Name())
+	defer func() { _ = os.Remove(maskLog.Name()) }()
 	for _, l := range maskLines {
-		maskLog.WriteString(l + "\n")
+		_, _ = maskLog.WriteString(l + "\n")
 	}
-	maskLog.Close()
+	_ = maskLog.Close()
 
 	// Mask size 120s (±60s): window is [10:04:00, 10:06:00]
 	// Should only match line at 10:05:00
@@ -366,11 +369,11 @@ func TestLogfilter_Color_BaseLevels(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 	for _, l := range lines {
-		tmp.WriteString(l + "\n")
+		_, _ = tmp.WriteString(l + "\n")
 	}
-	tmp.Close()
+	_ = tmp.Close()
 
 	out, err := executeCommand(tmp.Name(), "--color=always")
 	if err != nil {
@@ -410,7 +413,7 @@ func TestLogfilter_Color_BaseLevels(t *testing.T) {
 
 func TestLogfilter_Color_FilterMatchHighlight(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample_color")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	// 1. Namespace filter highlight in Blue (\033[1;34m)
 	outNs, err := executeCommand(logPath, "--color=always", "--namespace", "mydb.orders")
@@ -443,7 +446,7 @@ func TestLogfilter_Color_FilterMatchHighlight(t *testing.T) {
 
 func TestLogfilter_Color_NoColorFlags(t *testing.T) {
 	logPath := createSampleLogFile(t, "sample_nocolor")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	// 1. --color=never
 	outNever, err := executeCommand(logPath, "--color=never")
@@ -464,8 +467,7 @@ func TestLogfilter_Color_NoColorFlags(t *testing.T) {
 	}
 
 	// 3. NO_COLOR env var
-	os.Setenv("NO_COLOR", "1")
-	defer os.Unsetenv("NO_COLOR")
+	t.Setenv("NO_COLOR", "1")
 	outEnv, err := executeCommand(logPath)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

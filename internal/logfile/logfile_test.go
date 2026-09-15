@@ -49,18 +49,18 @@ func TestLogFile_FileAndBounds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 
 	if _, err := tmp.WriteString(content); err != nil {
 		t.Fatalf("failed to write content: %v", err)
 	}
-	tmp.Close()
+	_ = tmp.Close()
 
 	lf, err := Open(tmp.Name())
 	if err != nil {
 		t.Fatalf("failed to open logfile: %v", err)
 	}
-	defer lf.Close()
+	defer func() { _ = lf.Close() }()
 
 	if !lf.Start.Equal(start) {
 		t.Errorf("expected start %v, got %v", start, lf.Start)
@@ -79,18 +79,18 @@ func TestLogFile_FastForward(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 
 	if _, err := tmp.WriteString(content); err != nil {
 		t.Fatalf("failed to write content: %v", err)
 	}
-	tmp.Close()
+	_ = tmp.Close()
 
 	lf, err := Open(tmp.Name())
 	if err != nil {
 		t.Fatalf("failed to open logfile: %v", err)
 	}
-	defer lf.Close()
+	defer func() { _ = lf.Close() }()
 
 	// Fast forward to index 250 (start + 250m)
 	target := start.Add(250 * time.Minute)

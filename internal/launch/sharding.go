@@ -29,7 +29,7 @@ func AddShard(mongosHost string, mongosPort int, shardConnStr string, shardName 
 			}
 			var res bson.M
 			err = client.Database("admin").RunCommand(ctx, cmd).Decode(&res)
-			client.Disconnect(ctx)
+			_ = client.Disconnect(ctx)
 			cancel()
 
 			if err == nil {
@@ -62,7 +62,7 @@ func WaitForShards(mongosHost string, mongosPort int, expectedCount int, timeout
 		client, err := mongo.Connect(options.Client().ApplyURI(uri))
 		if err == nil {
 			count, err := client.Database("config").Collection("shards").CountDocuments(ctx, bson.M{})
-			client.Disconnect(ctx)
+			_ = client.Disconnect(ctx)
 			cancel()
 
 			if err == nil && int(count) >= expectedCount {

@@ -22,22 +22,23 @@ func executeLoginfo(args ...string) (string, error) {
 	// Capture stdout
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
+	defer func() { _ = r.Close() }()
 	os.Stdout = w
 
 	err := cmd.Execute()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	io.Copy(&outBuf, r)
+	_, _ = io.Copy(&outBuf, r)
 
 	return outBuf.String(), err
 }
 
 func TestLoginfo_Basic(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeLoginfo(logPath)
 	if err != nil {
@@ -54,7 +55,7 @@ func TestLoginfo_Basic(t *testing.T) {
 
 func TestLoginfo_Queries(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeLoginfo(logPath, "--queries", "--rounding", "2", "--sort", "sum")
 	if err != nil {
@@ -71,7 +72,7 @@ func TestLoginfo_Queries(t *testing.T) {
 
 func TestLoginfo_Distinct(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeLoginfo(logPath, "--distinct", "--distinctmin", "1", "--verbose")
 	if err != nil {
@@ -88,7 +89,7 @@ func TestLoginfo_Distinct(t *testing.T) {
 
 func TestLoginfo_Connections(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_sample")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeLoginfo(logPath, "--connections", "--connstats")
 	if err != nil {
@@ -105,9 +106,9 @@ func TestLoginfo_Connections(t *testing.T) {
 
 func TestLoginfo_MultipleFiles(t *testing.T) {
 	f1 := createSampleLogFile(t, "f1")
-	defer os.Remove(f1)
+	defer func() { _ = os.Remove(f1) }()
 	f2 := createSampleLogFile(t, "f2")
-	defer os.Remove(f2)
+	defer func() { _ = os.Remove(f2) }()
 
 	out, err := executeLoginfo(f1, f2)
 	if err != nil {
@@ -128,7 +129,7 @@ func TestLoginfo_NoArgs(t *testing.T) {
 
 func TestLoginfo_Color_Always(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_color_always")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	out, err := executeLoginfo(logPath, "--queries", "--color=always")
 	if err != nil {
@@ -155,7 +156,7 @@ func TestLoginfo_Color_Always(t *testing.T) {
 
 func TestLoginfo_Color_Disabled(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_color_off")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	cases := []struct {
 		name string
@@ -189,7 +190,7 @@ func TestLoginfo_Color_Disabled(t *testing.T) {
 
 func TestLoginfo_Color_StripMatchesPlain(t *testing.T) {
 	logPath := createSampleLogFile(t, "mloginfo_color_strip")
-	defer os.Remove(logPath)
+	defer func() { _ = os.Remove(logPath) }()
 
 	plain, err := executeLoginfo(logPath, "--queries")
 	if err != nil {

@@ -193,9 +193,11 @@ func createTempMaskFile(t *testing.T, lines []string) string {
 	if err != nil {
 		t.Fatalf("failed to create temp mask file: %v", err)
 	}
-	defer tmp.Close()
+	defer func() { _ = tmp.Close() }()
 	for _, l := range lines {
-		tmp.WriteString(l + "\n")
+		if _, err := tmp.WriteString(l + "\n"); err != nil {
+			t.Fatalf("failed to write to temp mask file: %v", err)
+		}
 	}
 	return tmp.Name()
 }
@@ -210,7 +212,7 @@ func TestMaskFilter_CenteringAndMerging(t *testing.T) {
 	}
 
 	maskFile := createTempMaskFile(t, lines)
-	defer os.Remove(maskFile)
+	defer func() { _ = os.Remove(maskFile) }()
 
 	// Test 1: mask-center=end with mask-size=60 (halfPadding=30s)
 	// Event 1 end: 10:00:00 -> [09:59:30, 10:00:30]

@@ -58,7 +58,7 @@ func InitiateReplSet(ctx context.Context, host string, port int, configDoc bson.
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s:%d: %w", host, port, err)
 	}
-	defer client.Disconnect(ctx)
+	defer func() { _ = client.Disconnect(ctx) }()
 
 	cmd := bson.D{{Key: "replSetInitiate", Value: configDoc}}
 
@@ -86,7 +86,7 @@ func WaitForPrimary(host string, port int, timeout time.Duration) error {
 		if err == nil {
 			var hello bson.M
 			err = client.Database("admin").RunCommand(ctx, bson.D{{Key: "hello", Value: 1}}).Decode(&hello)
-			client.Disconnect(ctx)
+			_ = client.Disconnect(ctx)
 			cancel()
 
 			if err == nil {

@@ -46,7 +46,7 @@ as well as optional deep-dive statistics sections like queries, distinct message
 connections, restarts, transactions, cursors, sharding, and client metadata.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				cmd.Usage()
+				_ = cmd.Usage()
 				return errors.New("at least one logfile argument must be provided")
 			}
 
@@ -90,10 +90,13 @@ connections, restarts, transactions, cursors, sharding, and client metadata.`,
 					return fmt.Errorf("failed to open %s: %w", path, err)
 				}
 
-				err = loginfo.RunAnalysis(lf, opts)
-				lf.Close()
-				if err != nil {
-					return err
+				analysisErr := loginfo.RunAnalysis(lf, opts)
+				closeErr := lf.Close()
+				if analysisErr != nil {
+					return analysisErr
+				}
+				if closeErr != nil {
+					return closeErr
 				}
 			}
 

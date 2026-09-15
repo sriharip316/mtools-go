@@ -60,7 +60,7 @@ func CreateAdminUser(ctx context.Context, host string, port int, username, passw
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s:%d to create admin user: %w", host, port, err)
 	}
-	defer client.Disconnect(ctx)
+	defer func() { _ = client.Disconnect(ctx) }()
 
 	// Build createUser command
 	cmd := bson.D{

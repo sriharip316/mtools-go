@@ -26,7 +26,7 @@ func PingHost(host string, port int, timeout time.Duration) bool {
 	if err != nil {
 		return false
 	}
-	defer client.Disconnect(ctx)
+	defer func() { _ = client.Disconnect(ctx) }()
 
 	var result bson.M
 	err = client.Database("admin").RunCommand(ctx, bson.D{{Key: "ping", Value: 1}}).Decode(&result)
@@ -40,7 +40,7 @@ func IsRunning(host string, port int) bool {
 	if err != nil {
 		return false
 	}
-	conn.Close()
+	_ = conn.Close()
 
 	// Then verify MongoDB ping
 	return PingHost(host, port, 1*time.Second)
@@ -196,7 +196,7 @@ func resolveNodeRole(host string, info *NodeInfo) {
 	if err != nil {
 		return
 	}
-	defer client.Disconnect(ctx)
+	defer func() { _ = client.Disconnect(ctx) }()
 
 	var hello bson.M
 	if err := client.Database("admin").RunCommand(ctx, bson.D{{Key: "hello", Value: 1}}).Decode(&hello); err == nil {

@@ -40,7 +40,7 @@ func NewMaskFilter(maskPath string, maskSizeSec int, maskCenter string) (*MaskFi
 	if err != nil {
 		return nil, fmt.Errorf("failed to open mask file %q: %w", maskPath, err)
 	}
-	defer lf.Close()
+	defer func() { _ = lf.Close() }()
 
 	halfPadding := time.Duration(maskSizeSec) * time.Second / 2
 

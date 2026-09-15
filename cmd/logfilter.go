@@ -126,7 +126,9 @@ merged by timestamp.`,
 					if err != nil {
 						return fmt.Errorf("failed to open logfile %s: %w", path, err)
 					}
-					defer lf.Close()
+					defer func(f *logfile.LogFile) {
+						_ = f.Close()
+					}(lf)
 					logfiles = append(logfiles, lf)
 				}
 			}
