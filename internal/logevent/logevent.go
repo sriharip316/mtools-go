@@ -2,7 +2,9 @@ package logevent
 
 import (
 	"encoding/json"
+	"net"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -161,14 +163,18 @@ func (ev *LogEvent) parseAttr() {
 		if len(matches) > 1 {
 			ev.Command = matches[1]
 		} else {
-			// Fallback: skip metadata keys
+			// Fallback: collect and sort candidates for deterministic selection
+			var candidateKeys []string
 			for k := range cmdMap {
 				if !strings.HasPrefix(k, "$") && k != "filter" && k != "sort" && k != "limit" &&
 					k != "pipeline" && k != "projection" && k != "skip" && k != "lsid" &&
 					k != "txnNumber" && k != "autocommit" && k != "comment" && k != "writeConcern" && k != "readConcern" {
-					ev.Command = k
-					break
+					candidateKeys = append(candidateKeys, k)
 				}
+			}
+			if len(candidateKeys) > 0 {
+				sort.Strings(candidateKeys)
+				ev.Command = candidateKeys[0]
 			}
 		}
 
@@ -281,18 +287,10 @@ func (ev *LogEvent) ToJSON(pretty bool) string {
 
 func cleanIP(addr string) string {
 	addr = strings.TrimSpace(addr)
-	if strings.HasPrefix(addr, "[") {
-		// IPv6 bracketed: [::1]:port
-		if idx := strings.LastIndex(addr, "]:"); idx != -1 {
-			return addr[1:idx]
-		}
-		return strings.Trim(addr, "[]")
+	if host, _, err := net.SplitHostPort(addr); err == nil {
+		return strings.Trim(host, "[]")
 	}
-	if strings.Contains(addr, ":") {
-		parts := strings.Split(addr, ":")
-		return parts[0]
-	}
-	return addr
+	return strings.Trim(addr, "[]")
 }
 
 func getStr(m map[string]any, key string) string {

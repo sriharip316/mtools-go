@@ -126,3 +126,24 @@ func TestToJSON(t *testing.T) {
 		t.Errorf("Expected pretty JSON to contain correctly indented key, got %v", strPretty)
 	}
 }
+
+func TestCleanIP(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"192.168.1.10:50000", "192.168.1.10"},
+		{"127.0.0.1", "127.0.0.1"},
+		{"[::1]:54321", "::1"},
+		{"::1", "::1"},
+		{"[2001:db8::1]:27017", "2001:db8::1"},
+		{"localhost:27017", "localhost"},
+	}
+
+	for _, tt := range tests {
+		got := cleanIP(tt.input)
+		if got != tt.expected {
+			t.Errorf("cleanIP(%q) = %q, want %q", tt.input, got, tt.expected)
+		}
+	}
+}

@@ -95,6 +95,15 @@ func (rl *RateLimiter) Wait(ctx context.Context) error {
 		return ctx.Err()
 	}
 
+	timer := time.NewTimer(0)
+	if !timer.Stop() {
+		select {
+		case <-timer.C:
+		default:
+		}
+	}
+	defer timer.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -129,10 +138,11 @@ func (rl *RateLimiter) Wait(ctx context.Context) error {
 
 		sleepDur := min(time.Duration(sleepSec*float64(time.Second)), 50*time.Millisecond)
 
+		timer.Reset(sleepDur)
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(sleepDur):
+		case <-timer.C:
 		}
 	}
 }

@@ -97,7 +97,7 @@ func DiscoverNodes(state *StartupState, defaultHost string) []NodeInfo {
 
 	pidsByPort := FindRunningProcesses()
 
-	var nodes []NodeInfo
+	nodes := make([]NodeInfo, 0, len(state.StartupInfo))
 
 	for portStr, cmdStr := range state.StartupInfo {
 		port, err := strconv.Atoi(portStr)
@@ -243,7 +243,7 @@ func generateTags(info *NodeInfo) []string {
 		tagMap[info.ShardName] = true
 	}
 
-	var tags []string
+	tags := make([]string, 0, len(tagMap))
 	for t := range tagMap {
 		tags = append(tags, t)
 	}

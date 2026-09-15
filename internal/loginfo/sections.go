@@ -315,7 +315,9 @@ func RunConnections(lf *logfile.LogFile, opts *Options) {
 		if isAccepted {
 			ipOpened[ip]++
 			if opts.ConnStats && ev.ConnectionID != nil && !ev.DateTime.IsZero() {
-				connStarts[*ev.ConnectionID] = ev.DateTime
+				if len(connStarts) < 1000000 {
+					connStarts[*ev.ConnectionID] = ev.DateTime
+				}
 			}
 		}
 

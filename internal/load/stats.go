@@ -3,6 +3,7 @@ package load
 import (
 	"encoding/json"
 	"fmt"
+	mathrand "math/rand"
 	"slices"
 	"sort"
 	"strings"
@@ -37,9 +38,11 @@ func (s *OpStats) Record(lat time.Duration) {
 	if len(s.Samples) < 5000 {
 		s.Samples = append(s.Samples, lat)
 	} else {
-		// Reservoir replacement
-		idx := int(s.Count % 5000)
-		s.Samples[idx] = lat
+		// Algorithm R reservoir replacement
+		idx := mathrand.Int63n(s.Count)
+		if idx < 5000 {
+			s.Samples[idx] = lat
+		}
 	}
 }
 

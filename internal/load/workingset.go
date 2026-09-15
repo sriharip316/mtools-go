@@ -111,10 +111,11 @@ func (ws *WorkingSet) Remove(coll string, id any) bool {
 	}
 
 	lastIdx := len(p.items) - 1
-	lastItem := p.items[lastIdx]
-
-	p.items[idx] = lastItem
-	p.index[lastItem] = idx
+	if idx != lastIdx {
+		lastItem := p.items[lastIdx]
+		p.items[idx] = lastItem
+		p.index[lastItem] = idx
+	}
 
 	p.items = p.items[:lastIdx]
 	delete(p.index, id)

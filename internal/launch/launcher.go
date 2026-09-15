@@ -204,15 +204,17 @@ func initSingle(opts *ClusterOptions, mongodPath, keyfilePath string, state *Sta
 	if opts.Auth {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		_ = CreateAdminUser(ctx, opts.Hostname, opts.Port, opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles)
+		if err := CreateAdminUser(ctx, opts.Hostname, opts.Port, opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles); err != nil {
+			return fmt.Errorf("failed to create admin user on port %d: %w", opts.Port, err)
+		}
 	}
 
 	return nil
 }
 
 func initReplicaSet(opts *ClusterOptions, mongodPath, keyfilePath string, state *StartupState) error {
-	var ports []int
-	var launchedPorts []int
+	ports := make([]int, 0, opts.Nodes)
+	launchedPorts := make([]int, 0, opts.Nodes+1)
 
 	for i := 0; i < opts.Nodes; i++ {
 		p := opts.Port + i
@@ -299,7 +301,9 @@ func initReplicaSet(opts *ClusterOptions, mongodPath, keyfilePath string, state 
 	if opts.Auth {
 		ctxUser, cancelUser := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancelUser()
-		_ = CreateAdminUser(ctxUser, opts.Hostname, ports[0], opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles)
+		if err := CreateAdminUser(ctxUser, opts.Hostname, ports[0], opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles); err != nil {
+			return fmt.Errorf("failed to create admin user on port %d: %w", ports[0], err)
+		}
 	}
 
 	return nil
@@ -526,8 +530,9 @@ func initSharded(opts *ClusterOptions, mongodPath, mongosPath, keyfilePath strin
 	for _, shard := range shards {
 		sDoc := BuildReplSetDoc(shard.name, opts.Hostname, shard.ports, shard.arbPort, false)
 		ctxShard, cancelShard := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancelShard()
-		if err := InitiateReplSet(ctxShard, opts.Hostname, shard.ports[0], sDoc); err != nil {
+		err := InitiateReplSet(ctxShard, opts.Hostname, shard.ports[0], sDoc)
+		cancelShard()
+		if err != nil {
 			return fmt.Errorf("failed to initiate replica set for %s: %w", shard.name, err)
 		}
 		if err := WaitForPrimary(opts.Hostname, shard.ports[0], 30*time.Second); err != nil {
@@ -588,16 +593,20 @@ func initSharded(opts *ClusterOptions, mongodPath, mongosPath, keyfilePath strin
 
 	if opts.Auth {
 		ctxUser, cancelUser := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancelUser()
-		if err := CreateAdminUser(ctxUser, opts.Hostname, mongosPorts[0], opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles); err != nil {
+		err := CreateAdminUser(ctxUser, opts.Hostname, mongosPorts[0], opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles)
+		cancelUser()
+		if err != nil {
 			return fmt.Errorf("failed to create admin user on mongos: %w", err)
 		}
 
 		// Also create on shard primaries
 		for _, shard := range shards {
 			ctxShardUser, cancelShardUser := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancelShardUser()
-			_ = CreateAdminUser(ctxShardUser, opts.Hostname, shard.ports[0], opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles)
+			err := CreateAdminUser(ctxShardUser, opts.Hostname, shard.ports[0], opts.Username, opts.Password, opts.AuthDB, opts.AuthRoles)
+			cancelShardUser()
+			if err != nil {
+				return fmt.Errorf("failed to create admin user on shard %s (port %d): %w", shard.name, shard.ports[0], err)
+			}
 		}
 	}
 

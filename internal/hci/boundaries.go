@@ -248,7 +248,7 @@ func (dtb *DateTimeBoundaries) String2DT(s string, lowerBound *time.Time) (time.
 			// Try year-1 if after end, or year+1 if before start
 			if t.After(dtb.End) {
 				t1 := t.AddDate(-1, 0, 0)
-				if !t1.Before(dtb.Start) || t1.After(dtb.Start) {
+				if !t1.Before(dtb.Start) {
 					t = t1
 				}
 			} else if t.Before(dtb.Start) {
